@@ -15,3 +15,17 @@ sequelize.sync().then(() => {
 });
 if (err) throw err
 
+const {Model, Datatypes} = require('sequelize');
+
+class Dept extends Model {}
+
+Dept.init(
+    {
+        name:{
+            type: Datatypes.STRING(30)
+        },
+        role:{
+            type: Datatypes.STRING(30)
+        }
+    }
+)
