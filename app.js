@@ -6,7 +6,7 @@
     host: 'localhost',
     port: 3306,
     user: 'root',
-    password: 'Ch13f8789',
+    password: 'password',
     database: 'empData_DB',
     multipleStatements: true
 });
@@ -33,8 +33,8 @@ function runApp (){
             ]
     }
 ]).then(function(val) {
-        switch (val.choice) {
-            case 'View All Employees':
+        switch (val.options) {
+            case 'View Employees':
               viewAllEmp();
             break;
     
@@ -67,21 +67,21 @@ function viewAllEmp() {
     connection.query('SELECT employee.first_name, employee.last_name, role.title, role.salary, department.name, CONCAT(e.first_name, e.last_name) AS Manager FROM employee INNER JOIN role on role.id = employee.role_id INNER JOIN department on department.id = role.department_id left join employee e on employee.manager_id = e.id;', 
     function(err, res) {
       if (err) throw err
-      conTable(res)
+      console.table(res)
       runApp()
 })};
 function viewPos() {
   connection.query('SELECT employee.first_name, employee.last_name, role.title AS Title FROM employee JOIN role ON employee.role_id = role.id;', 
   function(err, res) {
   if (err) throw err
-  conTable(res)
+  console.table(res)
   runApp()
 })};
 function viewDept() {
   connection.query('SELECT employee.first_name, employee.last_name, department.name AS Department FROM employee JOIN role ON employee.role_id = role.id JOIN department ON role.department_id = department.id ORDER BY employee.id;', 
   function(err, res) {
     if (err) throw err
-    conTable(res)
+    console.table(res)
     runApp()
 })};
 let posArray = [];
@@ -138,7 +138,7 @@ function addEmp() {
           
       }, function(err){
           if (err) throw err
-          conTable(val)
+          console.table(val)
           runApp()
       })
 })};
@@ -176,7 +176,7 @@ function addEmp() {
         }, 
         function(err){
             if (err) throw err
-            conTable(val)
+            console.table(val)
             startPrompt()
         })
     });
@@ -198,12 +198,12 @@ function addPos() {
         connection.query(
             "INSERT INTO role SET ?",
             {
-              title: res.Title,
-              salary: res.Salary,
+              title: res.title,
+              salary: res.salary,
             },
             function(err) {
                 if (err) throw err
-                conTable(res);
+                console.table(res);
                 startPrompt();
             }
         )
@@ -224,7 +224,7 @@ function addDept() {
             },
             function(err) {
                 if (err) throw err
-                conTable(res);
+                console.table(res);
                 startPrompt();
             }
         )
