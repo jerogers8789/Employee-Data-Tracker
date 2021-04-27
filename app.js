@@ -1,12 +1,13 @@
  const inquirer = require('inquirer');
  const mysql = require('mysql');
  const conTable = require('console.table');
-
+ const util = require('util')
+ require('dotenv').config()
  const connection = mysql.createConnection({
     host: 'localhost',
     port: 3306,
     user: 'root',
-    password: 'password',
+    password: process.env.MY_DB_PW,
     database: 'empData_DB',
     multipleStatements: true
 });
@@ -45,19 +46,19 @@ function runApp (){
               viewDept();
             break;
           
-          case 'Add Emp?':
+          case 'Add Employee':
                 addEmp();
               break;
 
-          case 'Update Emp':
+          case 'Update Employee info':
                 updateEmp();
               break;
       
-            case 'Add Pos?':
+            case 'Add Role':
                 addPos();
               break;
       
-            case 'Add Dept?':
+            case 'Add Dept':
                 addDept();
               break;
     
@@ -102,7 +103,8 @@ function selectManager() {
     }})
   return managerArray;
 };
-function addEmp() { 
+async function addEmp() { 
+  const managers = await selectManager();
     inquirer.prompt([
         {
           name: 'first-name',
@@ -115,34 +117,34 @@ function addEmp() {
           message: 'Enter last name'
         },
         {
-          name: 'Position',
+          name: 'position',
           type: 'list',
           message: 'Select Job Title',
-          choices: selectPos()
+          choices: await selectPos()
         },
         {
-            name: 'Manager',
-            type: 'rawlist',
-            message: 'Select the Employees manager',
-            choices: selectManager()
+          name: 'manager',
+          type: 'rawlist',
+          message: 'Select the Employees manager',
+          choices: await selectManager()
         }
-    ]).then(function (val) {
-      var roleId = selectPos().indexOf(val.role) + 1
-      var managerId = selectManager().indexOf(val.choice) + 1
+    ]).then(function (res) {
+      let roleId = selectPos().indexOf(res.position) + 1
+      let managerId = selectManager().indexOf(res.manager) + 1
       connection.query('INSERT INTO employee SET ?', 
       {
-          first_name: val.firstName,
-          last_name: val.lastName,
+          first_name: res.firstName,
+          last_name: res.lastName,
           manager_id: managerId,
           role_id: roleId
           
       }, function(err){
           if (err) throw err
-          console.table(val)
+          console.table(res)
           runApp()
       })
 })};
-  function updateEmp() {
+async function updateEmp() {
     connection.query('SELECT employee.last_name, role.title FROM employee JOIN role ON employee.role_id = role.id;', function(err, res) {
      if (err) throw err
      console.log(res)
@@ -157,7 +159,7 @@ function addEmp() {
               }
               return lastName;
             },
-            message: 'Enter employees last name',
+            message: 'Select employees last name',
           },
           {
             name: 'newRole',
@@ -165,22 +167,23 @@ function addEmp() {
             message: 'Enter new job title',
             choices: selectPos()
           },
-      ]).then(function(val) {
-        var roleId = selectPos().indexOf(val.role) + 1
-        connection.query('UPDATE employee SET WHERE ?', 
+      ]).then(function(res) {
+        var roleId = selectPos().indexOf(res.role) + 1
+        connection.query('UPDATE employees SET WHERE ?', 
         {
-          last_name: val.lastName
+          last_name: res.lastName
         }, 
         {
           role_id: roleId           
         }, 
         function(err){
             if (err) throw err
-            console.table(val)
-            startPrompt()
+            console.table(res)
+            runApp()
         })
     });
 })};
+
 function addPos() { 
   connection.query('SELECT role.title AS Title, role.salary AS Salary FROM role',   function(err, res) {
     inquirer.prompt([
@@ -204,7 +207,7 @@ function addPos() {
             function(err) {
                 if (err) throw err
                 console.table(res);
-                startPrompt();
+                runApp();
             }
         )
     });
@@ -225,7 +228,7 @@ function addDept() {
             function(err) {
                 if (err) throw err
                 console.table(res);
-                startPrompt();
+                runApp();
             }
         )
 })};
