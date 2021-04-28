@@ -145,44 +145,43 @@ async function addEmp() {
       })
 })};
 async function updateEmp() {
-    connection.query('SELECT employee.last_name, role.title FROM employee JOIN role ON employee.role_id = role.id;', function(err, res) {
+    connection.query('SELECT * FROM employee', (err, res) => {
      if (err) throw err
      console.log(res)
+     let employees = res.map(e => ({
+       name: `${e.first_name} ${e.last_name}`,
+       value: `${e.id}`
+     }));
+     console.table(employees);
+     connection.query('SELECT * FROM role', (err, res) => {
+       if (err) throw err;
+       console.table(res);
+       let role = res.map(r => ({
+         name: `${r.title}`,
+         value: `${r.id}`
+       }));    
     inquirer.prompt([
           {
-            name: 'lastName',
-            type: 'rawlist',
-            choices: function() {
-              var lastName = [];
-              for (var i = 0; i < res.length; i++) {
-                lastName.push(res[i].last_name);
-              }
-              return lastName;
-            },
-            message: 'Select employees last name',
+            name: 'NewId',
+            type: 'list',
+            message: 'Select employees to update',
+            choices: employees
           },
           {
-            name: 'newRole',
-            type: 'rawlist',
+            name: 'NewPos',
+            type: 'list',
             message: 'Enter new job title',
-            choices: selectPos()
+            choices: role
           },
-      ]).then(function(res) {
-        var roleId = selectPos().indexOf(res.role) + 1
-        connection.query('UPDATE employees SET WHERE ?', 
-        {
-          last_name: res.lastName
-        }, 
-        {
-          role_id: roleId           
-        }, 
-        function(err){
+      ]).then(function({NewId, NewPos}) {
+        const query = `UPDATE employee SET role_id = ? WHERE id = ?`;
+        connection.query(query, [NewId, NewPos], function(err, res){
             if (err) throw err
             console.table(res)
             runApp()
         })
     });
-})};
+})})};
 
 function addPos() { 
   connection.query('SELECT role.title AS Title, role.salary AS Salary FROM role',   function(err, res) {
